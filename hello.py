@@ -99,6 +99,11 @@ def update(id):
 class NamerForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
+    
+# Create a Password Form Class
+class NamerForm(FlaskForm):
+    name = StringField('What is your name?', validators=[DataRequired()])
+    submit = SubmitField('Submit')
 
 @app.route('/user/add', methods=['GET', 'POST'])
 def add_user():
@@ -158,6 +163,8 @@ def page_not_found(e):
 def name():
     name = None
     form = NamerForm()
+
+    #Validate Form
     if form.validate_on_submit():
         name = form.name.data
         form.name.data = ''
@@ -172,6 +179,8 @@ def name():
     pw_to_check = None
     passed = None
     form = PasswordForm()
+
+    #Validate Form
     if form.validate_on_submit():
         name = form.name.data
         form.name.data = ''
