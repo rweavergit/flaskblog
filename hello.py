@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import date
 
 # Flask instance
 app = Flask(__name__)
@@ -21,7 +22,19 @@ app.config['SECRET_KEY'] = 'mysecretkey'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# Create Blog Post Model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    slug = db.Column(db.String(255))
 
+#Jsons
+@app.route('/date')
+def get_current_date():
+    return {"Date": date.today()}
 
 #Create Model Class 
 class Users(db.Model):
@@ -99,10 +112,11 @@ def update(id):
 class NamerForm(FlaskForm):
     name = StringField('What is your name?', validators=[DataRequired()])
     submit = SubmitField('Submit')
-    
+
 # Create a Password Form Class
-class NamerForm(FlaskForm):
-    name = StringField('What is your name?', validators=[DataRequired()])
+class PasswordForm(FlaskForm):
+    email = StringField('What is your email?', validators=[DataRequired()])
+    password_hash = PasswordField('What is your Password?', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 @app.route('/user/add', methods=['GET', 'POST'])
@@ -173,7 +187,7 @@ def name():
     
 # Create Password Test Page
 @app.route('/test_pw', methods=['GET', 'POST'])
-def name():
+def test_pw():
     email = None
     password = None
     pw_to_check = None
@@ -182,8 +196,16 @@ def name():
 
     #Validate Form
     if form.validate_on_submit():
-        name = form.name.data
-        form.name.data = ''
-        flash("Form Submitted Successfully!")
-    return render_template('name.html', name=name, form=form)
+        email = form.email.data
+        password = form.password_hash.data
+
+        form.email.data = ''
+        form.password_hash.data = ''
+
+        #Lookup User by Email
+        pw_to_check = Users.query.filter_by(email=email).first()
+
+        #Check Hashed Password
+        passed = check_password_hash(pw_to_check.password_hash, password)
+    return render_template('test_pw.html', email=email, password=password, form=form, pw_to_check=pw_to_check, passed=passed)
     
