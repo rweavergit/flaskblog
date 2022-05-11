@@ -23,7 +23,7 @@
         <a href="{{ url_for('delete_post', id=post.id) }}" class="btn btn-outline-danger btn-sm">Delete</a>
 
         <div class="text-end">
-            <h6>By:{{ post.author }} @ {{ post.date_posted }}</h6>
+            <h6>By: {{ post.poster.username }} @ {{ post.date_posted }}</h6>
         </div>
     </div>
 

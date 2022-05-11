@@ -100,7 +100,7 @@ def edit_post(id):
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
-        post.author = form.author.data
+        #post.author = form.author.data
         post.slug = form.slug.data
         #Update DB
         db.session.add(post)
@@ -108,17 +108,17 @@ def edit_post(id):
         flash('Your post has been updated!')
         return redirect(url_for('post', id=post.id))
     form.title.data = post.title
-    form.author.data = post.author
+    #form.author.data = post.author
     form.content.data = post.content
     form.slug.data = post.slug
     return render_template('edit_post.html', form=form, post=post)
 
 # Delete Post Page
-@app.route('/posts/<int:id>/delete')
+@app.route('/posts/delete/<int:id>')
 @login_required
 def delete_post(id):
     post_to_delete = Posts.query.get_or_404(id)
-
+    id = current_user.id
     try:
         db.session.delete(post_to_delete)
         db.session.commit()
@@ -138,11 +138,12 @@ def add_post():
     form = PostForm()
 
     if form.validate_on_submit():
-        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        poster = current_user.id
+        post = Posts(title=form.title.data, content=form.content.data, poster_id=poster, slug=form.slug.data)
         # Clear the Form
         form.title.data = ''
         form.content.data = ''
-        form.author.data = ''
+        #form.author.data = ''
         form.slug.data = ''
 
         # Add Post to DB
@@ -177,6 +178,7 @@ def delete(id):
 
 # Update the database
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
+@login_required
 def update(id):
     form = UserForm()
     name_to_update = Users.query.get_or_404(id)
@@ -288,9 +290,11 @@ class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    author = db.Column(db.String(255))
+    #author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     slug = db.Column(db.String(255))
+    # Foreign Key to Link User
+    poster_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
 #Create Model Class 
 class Users(db.Model, UserMixin):
@@ -302,6 +306,9 @@ class Users(db.Model, UserMixin):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     #Password
     password_hash = db.Column(db.String(128))
+    # User can have many posts
+    posts = db.relationship('Posts', backref='poster')
+
     @property
     def password(self):
         raise AttributeError('You cannot read the password attribute')
